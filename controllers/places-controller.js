@@ -14,6 +14,21 @@ const DUMMY_PLACES = [
   },
 ];
 
+const createPlace = (req, res, next) => {
+    const {title, description, coordinates, address, creator} = req.body;
+
+    const createdPlace = {
+        title,
+        description,
+        location: coordinates,
+        address,
+        creator
+    }
+
+    DUMMY_PLACES.push(createdPlace);
+    res.status(201).json(createdPlace)
+}
+
 const getPlaceById = (req, res, next) => {
   const placeId = req.params.pid;
   const foundPlace = DUMMY_PLACES.find((place) => place.id === placeId);
@@ -36,3 +51,4 @@ const getPlaceByUserId = (req, res, next) => {
 
 exports.getPlaceById = getPlaceById;
 exports.getPlaceByUserId = getPlaceByUserId;
+exports.createPlace = createPlace;
