@@ -26,10 +26,14 @@ const getAllUsers = (req, res, next) => {
 };
 
 const signUp = (req, res, next) => {
+  if (DUMMY_USERS.find((u) => u.email === req.body.email)) {
+    const error = new httpError("Email exists, use a different one!", 422);
+    throw error;
+  }
   req.body.id = uuid4();
   DUMMY_USERS.push(req.body);
 
-  res.json({ user: req.body });
+  res.status(201).json({ user: req.body });
 };
 
 const login = (req, res, next) => {
@@ -38,7 +42,7 @@ const login = (req, res, next) => {
   );
 
   if (!foundUser) {
-    const error = new httpError("Check your email and password!", 404);
+    const error = new httpError("Check your email and password!", 401);
     throw error;
   }
 
