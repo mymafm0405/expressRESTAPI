@@ -1,5 +1,6 @@
 const httpError = require("../models/http-error");
 const { v4: uuid4 } = require("uuid");
+const { validationResult } = require('express-validator')
 
 const DUMMY_USERS = [
   {
@@ -26,6 +27,10 @@ const getAllUsers = (req, res, next) => {
 };
 
 const signUp = (req, res, next) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    throw new httpError('Check your data!!', 422)
+  }
   if (DUMMY_USERS.find((u) => u.email === req.body.email)) {
     const error = new httpError("Email exists, use a different one!", 422);
     throw error;
@@ -37,6 +42,10 @@ const signUp = (req, res, next) => {
 };
 
 const login = (req, res, next) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    throw new httpError('Check your data!!', 422)
+  }
   const foundUser = DUMMY_USERS.find(
     (u) => u.email === req.body.email && u.password === req.body.password
   );
