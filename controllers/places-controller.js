@@ -1,22 +1,9 @@
 const httpError = require("../models/http-error");
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
+const Place = require("../models/place-model");
 
-const DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "Empire state",
-    description: "One of the most popular sky scrappers in the world",
-    location: {
-      lat: 222,
-      lng: 444,
-    },
-    address: "Somewhere in the world :-D",
-    creator: "u1",
-  },
-];
-
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
   const error = validationResult(req);
   if (!error.isEmpty()) {
     throw new httpError("Invalid inputs, check your data!!!", 422);
@@ -24,16 +11,31 @@ const createPlace = (req, res, next) => {
   const { title, description, coordinates, address, creator } = req.body;
   console.log(req.body);
 
-  const createdPlace = {
-    id: uuidv4(),
+  // const createdPlace = {
+  //   id: uuidv4(),
+  //   title,
+  //   description,
+  //   location: coordinates,
+  //   address,
+  //   creator,
+  // };
+
+  const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
     address,
+    image: "some url",
     creator,
-  };
+    location: coordinates,
+  });
 
-  DUMMY_PLACES.push(createdPlace);
+  try {
+    await createdPlace.save();
+  } catch (e) {
+    const error = "Could not create the place";
+    return next(error, 500);
+  }
+
   res.status(201).json({ place: createdPlace });
 };
 
