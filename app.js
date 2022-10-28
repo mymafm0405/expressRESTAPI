@@ -34,6 +34,6 @@ mongoose
     console.log("Connected to the database");
   })
   .catch((e) => {
-    const error = "Could not connect to database";
-    return next(error, 500);
+    const error = new httpError("Could not connect to database", 500)
+    return next(error);
   });
