@@ -4,13 +4,22 @@ const { validationResult } = require("express-validator");
 
 const User = require("../models/user-model");
 
-const getAllUsers = (req, res, next) => {
-  if (DUMMY_USERS.length === 0) {
+const getAllUsers = async (req, res, next) => {
+  let foundUsers;
+
+  try {
+    foundUsers = await User.find({}, "-password");
+  } catch (e) {
+    const error = new httpError("Something went wrong", 500);
+    return next(error);
+  }
+
+  if (foundUsers.length === 0) {
     const error = new httpError("No users found", 404);
     return next(error);
   }
 
-  res.json({ users: DUMMY_USERS });
+  res.json({ users: foundUsers.map((u) => u.toObject({ getters: true })) });
 };
 
 const signUp = async (req, res, next) => {
@@ -39,7 +48,7 @@ const signUp = async (req, res, next) => {
   // req.body.id = uuid4();
   // DUMMY_USERS.push(req.body);
 
-  const createdUser = new User({ ...req.body, image: "some url will be here" });
+  const createdUser = new User({ ...req.body, places: [], image: "some url will be here" });
   try {
     await createdUser.save();
   } catch (error) {
@@ -50,18 +59,27 @@ const signUp = async (req, res, next) => {
   res.status(201).json({ user: createdUser.toObject({ getters: true }) });
 };
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new httpError("Check your data!!", 422);
   }
-  const foundUser = DUMMY_USERS.find(
-    (u) => u.email === req.body.email && u.password === req.body.password
-  );
+
+  let foundUser;
+
+  try {
+    foundUser = await User.findOne({
+      email: req.body.email,
+      password: req.body.password,
+    });
+  } catch (e) {
+    const error = new httpError("Something went wrong", 500);
+    return next(error);
+  }
 
   if (!foundUser) {
     const error = new httpError("Check your email and password!", 401);
-    throw error;
+    return next(error);
   }
 
   res.json({ user: foundUser });
