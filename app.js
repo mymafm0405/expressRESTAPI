@@ -27,6 +27,7 @@ app.use((error, req, res, next) => {
   res.status(error.code || 500);
   res.json({ message: error.message || "An unknown error happened" });
 });
+
 mongoose
   .connect('mongodb+srv://Mido:QCsx!vr2-MdeJkX@cluster0.vejqa4q.mongodb.net/places_project?retryWrites=true&w=majority')
   .then(() => {
@@ -35,5 +36,5 @@ mongoose
   })
   .catch((e) => {
     const error = new httpError("Could not connect to database", 500)
-    return next(error);
+    throw error;
   });
