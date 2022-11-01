@@ -2,6 +2,8 @@ const httpError = require("../models/http-error");
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
 const Place = require("../models/place-model");
+const User = require("../models/user-model");
+const { default: mongoose } = require("mongoose");
 
 const createPlace = async (req, res, next) => {
   const error = validationResult(req);
@@ -29,8 +31,27 @@ const createPlace = async (req, res, next) => {
     location: coordinates,
   });
 
+  let user;
   try {
-    await createdPlace.save();
+    user = await User.findById(creator);
+  } catch (e) {
+    const error = new httpError("Something wrong happened!", 500);
+    return next(error);
+  }
+  console.log(user)
+
+  if (!user) {
+    const error = new httpError("No users found with this id", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPlace.save({ session: sess });
+    user.places.push(createdPlace);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
   } catch (e) {
     const error = new httpError("Could not create the place", 500);
     return next(error);
@@ -121,10 +142,10 @@ const deletePlace = async (req, res, next) => {
   }
 
   try {
-    await foundPlace.remove()
+    await foundPlace.remove();
   } catch (error) {
     const e = new httpError("Something wrong happened", 500);
-    return next(e)
+    return next(e);
   }
 
   res.json("Deleted");
