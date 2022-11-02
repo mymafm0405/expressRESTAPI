@@ -132,6 +132,7 @@ const deletePlace = async (req, res, next) => {
 
   try {
     foundPlace = await Place.findById(pid).populate("creator");
+    console.log(foundPlace)
   } catch (error) {
     const e = new httpError("Something wrong happened!!!!", 500);
     return next(e);
@@ -145,7 +146,10 @@ const deletePlace = async (req, res, next) => {
     const sess = await mongoose.startSession();
     sess.startTransaction();
     await foundPlace.remove({ session: sess });
+    console.log(foundPlace.creator.places)
     foundPlace.creator.places.pull(foundPlace);
+    console.log(foundPlace)
+    console.log(foundPlace.creator.places)
     await foundPlace.creator.save({ session: sess });
     await sess.commitTransaction()
   } catch (error) {
