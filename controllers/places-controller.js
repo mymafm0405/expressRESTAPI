@@ -38,7 +38,7 @@ const createPlace = async (req, res, next) => {
     const error = new httpError("Something wrong happened!", 500);
     return next(error);
   }
-  console.log(user)
+  console.log(user);
 
   if (!user) {
     const error = new httpError("No users found with this id", 404);
@@ -131,9 +131,9 @@ const deletePlace = async (req, res, next) => {
   let foundPlace;
 
   try {
-    foundPlace = await Place.findById(pid);
+    foundPlace = await Place.findById(pid).populate("creator");
   } catch (error) {
-    const e = new httpError("Something wrong happened", 500);
+    const e = new httpError("Something wrong happened!!!!", 500);
     return next(e);
   }
   if (!foundPlace) {
@@ -142,9 +142,14 @@ const deletePlace = async (req, res, next) => {
   }
 
   try {
-    await foundPlace.remove();
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await foundPlace.remove({ session: sess });
+    foundPlace.creator.places.pull(foundPlace);
+    await foundPlace.creator.save({ session: sess });
+    await sess.commitTransaction()
   } catch (error) {
-    const e = new httpError("Something wrong happened", 500);
+    const e = new httpError("Something wrong happened???", 500);
     return next(e);
   }
 
