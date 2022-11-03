@@ -84,16 +84,17 @@ const getPlaceByUserId = async (req, res, next) => {
   const userId = req.params.uid;
   let foundPlaces;
   try {
-    foundPlaces = await Place.find({ creator: userId });
+    foundPlaces = await User.findById(userId).populate('places');
+    console.log(foundPlaces)
   } catch (e) {
     const error = new httpError("Something wrong happened!!!", 500);
     return next(error);
   }
 
-  if (foundPlaces.length === 0) {
+  if (!foundPlaces && foundPlaces.length === 0) {
     return next(new httpError("Could not find a user id!!", 404));
   }
-  res.json({ places: foundPlaces.map((p) => p.toObject({ getters: true })) });
+  res.json({ places: foundPlaces.places.map((p) => p.toObject({ getters: true })) });
 };
 
 const updatePlace = async (req, res, next) => {
